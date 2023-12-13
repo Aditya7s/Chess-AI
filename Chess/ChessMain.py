@@ -42,7 +42,7 @@ def main():
             # mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() # (x, y) location of mouse
-                col = location[0] // SQ_SIZE
+                col = location[0] // SQ_SIZE 
                 row = location[1] // SQ_SIZE
                 if sqSelected == (row, col): # the user clicked the same square twice
                     sqSelected = () # deselect
@@ -56,8 +56,10 @@ def main():
                     if move in validMoves:
                         gs.makeMove(move)
                         moveMade = True
-                    sqSelected = () # reset user clicks
-                    playerClicks = []
+                        sqSelected = () # reset user clicks
+                        playerClicks = []
+                    else:
+                        playerClicks = [sqSelected] # reset
             
             # key handlers
             elif e.type == p.KEYDOWN:
