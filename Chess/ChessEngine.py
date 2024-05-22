@@ -202,7 +202,7 @@ class GameState():
             else:
                 self.getCastleMoves(self.black_king_location[0], self.black_king_location[1], moves)
         if len(moves) == 0: # either checkmate or stalemate
-            if self.in_check():
+            if self.in_check:
                 self.checkmate = True
             else:
                 self.stalemate = True
