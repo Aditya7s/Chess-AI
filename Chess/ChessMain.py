@@ -4,6 +4,7 @@ This is our main driver file. It will be responsible for handling user input and
 
 import pygame as p
 import ChessEngine
+import SmartMoveFinder
 WIDTH = HEIGHT = 512 # 400 is another option
 DIMENSION = 8 # dimeensions of a chess board are 8x8
 SQ_SIZE = HEIGHT // DIMENSION
@@ -37,13 +38,16 @@ def main():
     player_clicks = [] # keep track of player clicks (two tuples: [(6,4), (4,4)])
     running = True
     game_over = False
+    player_one = True # If a Human is playing white, then this will be True. if an AI is playing, then this will be false
+    player_two = False # Same as above but for black
     while running:
+        human_turn = (gs.white_to_move and player_one) or (not gs.white_to_move and player_two)
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
             # mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
-                if not game_over:
+                if not game_over and human_turn:
                     location = p.mouse.get_pos() # (x, y) location of mouse
                     col = location[0] // SQ_SIZE 
                     row = location[1] // SQ_SIZE
@@ -79,6 +83,17 @@ def main():
                     player_clicks = []
                     move_made = False
                     animate = False
+        
+        # AI move finder
+        if not game_over and not human_turn:
+            AI_move = SmartMoveFinder.findBestMove(gs, valid_moves)
+            if AI_move is None:
+                AI_move = SmartMoveFinder.findRandomMove(valid_moves)
+            gs.makeMove(AI_move)
+            move_made = True
+            animate = True
+            print(AI_move.getChessNotation())
+        
         if move_made:
             if animate:
                 animateMove(gs.move_log[-1], screen, gs.board, clock)
@@ -172,7 +187,7 @@ def animateMove(move, screen, board, clock):
         # draw moving piece
         screen.blit(IMAGES[move.piece_moved], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
         p.display.flip()
-        clock.tick(60)
+        clock.tick(240)
         
 def drawText(screen, text):
     font = p.font.SysFont("Helvetica", 32, True, False)
