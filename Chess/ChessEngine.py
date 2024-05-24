@@ -117,6 +117,9 @@ class GameState():
                 else: # queenside
                     self.board[move.end_row][move.end_col-2] = self.board[move.end_row][move.end_col+1]
                     self.board[move.end_row][move.end_col+1] = '--'
+            
+            self.checkmate = False
+            self.stalemate = False
     
     '''
     Update the castle rights
