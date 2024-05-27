@@ -39,7 +39,7 @@ def main():
     running = True
     game_over = False
     player_one = False # If a Human is playing white, then this will be True. if an AI is playing, then this will be false
-    player_two = False # Same as above but for black
+    player_two = True # Same as above but for black
     while running:
         human_turn = (gs.white_to_move and player_one) or (not gs.white_to_move and player_two)
         for e in p.event.get():
@@ -88,7 +88,7 @@ def main():
         
         # AI move finder
         if not game_over and not human_turn:
-            AI_move = SmartMoveFinder.findBestMoveMinMax(gs, valid_moves)
+            AI_move = SmartMoveFinder.findBestMove(gs, valid_moves)
             if AI_move is None:
                 AI_move = SmartMoveFinder.findRandomMove(valid_moves)
             gs.makeMove(AI_move)

@@ -3,7 +3,7 @@ import random
 piece_score = {"K": 0, "Q": 10, "R": 5, "B": 3, "N": 3, "p": 1}
 CHECKMATE = 1000
 STALEMATE = 0
-DEPTH = 3
+DEPTH = 2
 
 '''
 Picks and returns a random moves
@@ -14,7 +14,7 @@ def findRandomMove(valid_moves):
 '''
 Find the best move based on material alone
 '''
-def findBestMove(gs, valid_moves):
+def findBestMoveMinMaxNoRecursion(gs, valid_moves):
     turn_multiplier = 1 if gs.white_to_move else -1
     opponent_minmax_score = CHECKMATE
     best_player_move = None
@@ -49,10 +49,15 @@ def findBestMove(gs, valid_moves):
 '''
 Helper method to make the first recursive call
 '''
-def findBestMoveMinMax(gs, valid_moves):
-    global next_move
+def findBestMove(gs, valid_moves):
+    global next_move, counter
     next_move = None
-    findMoveMinMax(gs, valid_moves, DEPTH, gs.white_to_move)
+    random.shuffle(valid_moves)
+    counter = 0
+    # findMoveMinMax(gs, valid_moves, DEPTH, gs.white_to_move)
+    findMoveNegaMax(gs, valid_moves, DEPTH, 1 if gs.white_to_move else -1)
+    # findMoveNegaMaxAlphaBeta(gs, valid_moves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gs.white_to_move else -1)
+    print(counter)
     return next_move
 
 def findMoveMinMax(gs, valid_moves, depth, white_to_move):
@@ -85,7 +90,48 @@ def findMoveMinMax(gs, valid_moves, depth, white_to_move):
                     next_move = move
             gs.undoMove()
         return min_score
-            
+
+
+def findMoveNegaMax(gs, valid_moves, depth, turn_multiplier):
+    global next_move, counter
+    counter += 1
+    if depth == 0:
+        return turn_multiplier * scoreBoard(gs)
+    
+    max_score = -CHECKMATE
+    for move in valid_moves:
+        gs.makeMove(move)
+        next_moves = gs.getValidMoves()
+        score = -findMoveNegaMax(gs, next_moves, depth-1, -turn_multiplier)
+        if score > max_score:
+            max_score = score
+            if depth == DEPTH:
+                next_move = move
+        gs.undoMove()
+    return max_score
+
+
+def findMoveNegaMaxAlphaBeta(gs, valid_moves, depth, alpha, beta, turn_multiplier):
+    global next_move, counter
+    if depth == 0:
+        return turn_multiplier * scoreBoard(gs)
+    counter += 1
+    # move ordering - implement later
+    max_score = -CHECKMATE
+    for move in valid_moves:
+        gs.makeMove(move)
+        next_moves = gs.getValidMoves()
+        score = -findMoveNegaMaxAlphaBeta(gs, next_moves, depth-1, -beta, -alpha, -turn_multiplier)
+        if score > max_score:
+            max_score = score
+            if depth == DEPTH:
+                next_move = move
+        gs.undoMove()
+        if max_score > alpha: # pruning happens
+            alpha = max_score
+        if alpha >= beta:
+            break
+    return max_score
 
 '''
 A positive score is good for white, a negative score is good for black
