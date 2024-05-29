@@ -30,6 +30,7 @@ class GameState():
         self.checkmate = False
         self.stalemate = False
         self.enpassant_possible = () # Coordinates for the square where an enpassant capture is possible
+        self.enpassant_possible_log = [self.enpassant_possible]
         self.current_castling_right = CastleRights(True, True, True, True)
         self.castle_rights_log = [CastleRights(self.current_castling_right.wks, self.current_castling_right.bks, 
                                                self.current_castling_right.wqs, self.current_castling_right.bqs)]
@@ -76,6 +77,8 @@ class GameState():
                 self.board[move.end_row][move.end_col+1] = self.board[move.end_row][move.end_col-2] # moves the rook
                 self.board[move.end_row][move.end_col-2] = '--' # erase old rook
         
+        self.enpassant_possible_log.append(self.enpassant_possible)
+        
         # update castling rights - whenever its a rook or a king move
         self.updateCastleRights(move)
         self.castle_rights_log.append(CastleRights(self.current_castling_right.wks, self.current_castling_right.bks, 
@@ -101,10 +104,9 @@ class GameState():
             if move.en_passant:
                 self.board[move.end_row][move.end_col] = '--' # removes the pawn that was added in the wrong square
                 self.board[move.start_row][move.end_col] = move.piece_captured # puts the pawn back on the correct square it was captured from
-                self.enpassant_possible = (move.end_row, move.end_col) # allow an enpassant to happen on the next move
-            #undo a 2 square pawn advance
-            if move.piece_moved[1] == 'p' and abs(move.start_row - move.end_row) == 2:
-                self.enpassant_possible = ()
+
+            self.enpassant_possible_log.pop()
+            self.enpassant_possible = self.enpassant_possible_log[-1]
             
             #undo castling rights
             self.castle_rights_log.pop() # get rid of the new castle rights from the move we are undoing
@@ -581,6 +583,7 @@ class Move():
         # castle move
         self.is_castle_move = is_castle_move
         
+        self.is_capture = self.piece_captured != '--'
         self.moveID = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col
     
     '''
@@ -597,3 +600,28 @@ class Move():
         
     def getRankFile(self, r, c):
         return self.colsToFiles[c] + self.rowsToRanks[r]
+
+    # overriding the str() function
+    def __str__(self):
+        # castle move
+        if self.is_castle_move:
+            return "O-O" if self.end_col == 6 else "O-O-O"
+        
+        end_square = self.getRankFile(self.end_row, self.end_col)
+        # pawn moves
+        if self.piece_moved[1] == 'p':
+            if self.is_capture:
+                return self.colsToFiles[self.start_col] + "x" + end_square
+            else:
+                return end_square
+            
+            # add pawn promotions
+        # add two of same type fo piece moving to a square, Nbd2 if both knights can move to d2
+        
+        # also adding + for check move, and # for checkmate move
+        
+        # piece moves
+        move_string = self.piece_moved[1]
+        if self.is_capture:
+            move_string += 'x'
+        return move_string + end_square
